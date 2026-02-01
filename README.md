@@ -80,8 +80,8 @@ flowchart LR
     API -->|TrackLog Event| Kafka[(Kafka / Redpanda)]
     Kafka --> PersistService[Persist Service]
     PersistService --> MongoDB[(MongoDB Atlas)]
-    PersistService -->|Mongo Failure| DLQ[Kafka DLQ Topic][not implemented]
-    PersistService -->|Kafka Failure| MongoFallback[(Direct Mongo Insert)][not implemented]
+    PersistService -->|Mongo Failure| DLQ[Kafka DLQ Topic Not Implemented]
+    PersistService -->|Kafka Failure| MongoFallback[(Direct Mongo Insert Not Implemented)]
 ```
 
 ### Request Processing Flow
