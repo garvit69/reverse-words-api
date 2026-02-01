@@ -1,183 +1,192 @@
-📘 Reverse Words Platform
+# Reverse Words API – Microservices Demo with Reusable Base SDK
 
-A microservice-based system built with a reusable Base SDK that provides cross-cutting capabilities like tracking, validation, and Kafka integration.
+## 📌 Overview
+This project demonstrates a **microservices-based Spring Boot architecture** built with a **reusable Base SDK** that provides cross-cutting capabilities like:
 
-This project demonstrates clean architecture, AOP logging, schema validation, and event-driven observability.
+- Request/Response tracking via custom `@TrackLog` annotation  
+- Centralized schema validation  
+- Kafka-based event publishing  
+- MongoDB persistence  
+- Config reusability across services  
+- Encryption/Decryption utility for sensitive properties  
 
-🏗 High-Level Architecture
+The system processes text operations like **reversing words** and **searching words**, while transparently logging activity using an event-driven pipeline.
+
+---
+
+## 🧱 High-Level Architecture
+
+```mermaid
 flowchart LR
-    Client -->|HTTP Request| WordService
-    WordService -->|@Track Aspect| BaseSDK
-    BaseSDK -->|Publish TrackLog| Kafka[(Kafka Topic)]
-    Kafka --> PersistService
-    PersistService --> DB[(Database)]
+    Client --> API[Reverse/Search API Service]
+    API -->|@TrackLog Event| Kafka[(Kafka / Redpanda)]
+    Kafka --> PersistService[Persist Service]
+    PersistService --> MongoDB[(MongoDB Atlas)]
+    PersistService -->|On Mongo Failure| DLQ[Kafka DLQ Topic]
+    PersistService -->|On Kafka Failure| MongoFallback[(Direct Mongo Insert)]
+```
 
-📦 Project Modules
-Module	Purpose
-base-sdk	Shared infrastructure layer (logging, validation, Kafka, models)
-word-service	Business APIs (Reverse Sentence, Search Word)
-persist-service	Kafka consumer that stores TrackLogs into DB
-🧩 Base SDK — Reusable Core
+---
 
-The Base SDK is packaged as a JAR and reused across services.
-It removes duplication and centralizes infrastructure logic.
+## 🔄 Request Processing Flow
 
-Provides
-
-✔ Controller tracking via annotation
-✔ Request/response schema validation
-✔ Kafka producer setup
-✔ Optional Kafka consumer
-✔ Standard logging model (TrackLog)
-✔ Base controller abstraction
-
-🎯 @Track Annotation
-
-Controllers simply add:
-
-@Track
-@PostMapping("/reverse")
-public ReverseSentenceRes reverse(@RequestBody ReverseSentenceReq req) { ... }
-
-
-Everything else happens automatically via AOP.
-
-🔍 TrackAspect (AOP Engine)
-
-The SDK includes an aspect that intercepts all @Track methods and captures:
-
-Field	Description
-uniqueId	Unique request identifier
-serviceName	reverse / search
-requestBody	Incoming request object
-responseBody	Outgoing response object
-requestTs	Request timestamp
-responseTs	Response timestamp
-executionTimeMs	Processing duration
-httpStatus	HTTP status code
-
-This data is packaged into a TrackLog and sent to Kafka.
-
-🚀 Event-Driven Logging
-
-Instead of saving logs synchronously:
-
-Word Service publishes TrackLog to Kafka
-
-Persist Service consumes it
-
-Persist Service stores it in DB
-
-This keeps APIs fast and scalable.
-
-🔄 Request Lifecycle (Sequence Diagram)
+```mermaid
 sequenceDiagram
-    participant C as Client
-    participant WS as Word Service
-    participant AOP as TrackAspect (SDK)
-    participant K as Kafka
-    participant PS as Persist Service
-    participant DB as Database
+    participant Client
+    participant API Service
+    participant Base SDK
+    participant Kafka
+    participant Persist Service
+    participant MongoDB
 
-    C->>WS: HTTP Request
-    WS->>AOP: Method intercepted (@Track)
-    AOP->>WS: Proceed with business logic
-    WS-->>AOP: Return response
-    AOP->>K: Publish TrackLog
-    AOP-->>C: HTTP Response
+    Client->>API Service: REST Request
+    API Service->>Base SDK: @TrackLog Aspect Triggered
+    Base SDK->>Kafka: Publish TrackLog Event
+    API Service-->>Client: Business Response
 
-    K->>PS: TrackLog event
-    PS->>DB: Save TrackLog
+    Kafka->>Persist Service: Consume TrackLog Event
+    Persist Service->>MongoDB: Store Log Document
+```
 
-🧾 Schema Validation
+---
 
-All requests are validated against JSON schemas stored in:
+## 🧩 Base SDK (Reusable Foundation)
 
-resources/schema/
+The **Base SDK** is designed to be shared across services and contains:
 
+### ✔ Track Logging Framework
+- Custom annotation: `@TrackLog`
+- AOP Aspect intercepts annotated methods
+- Captures request, response, headers, execution time, etc.
+- Publishes structured event to Kafka
 
-Validation errors are collected and returned in structured responses instead of throwing runtime exceptions.
+### ✔ Schema Validation
+- JSON Schema validation using NetworkNT library
+- Centralized validator reusable by all services
+- Errors wrapped into a structured validation response
 
-🧠 Base Controller Abstraction
+### ✔ Encryption Utility
+- Allows encrypted passwords in config
+- Demo uses plain text, but SDK supports secure usage
 
-Controllers extend SDK base logic that provides:
+### ✔ Common Config
+`base-config.yaml` contains shared properties like:
 
-✔ Schema validation
-✔ Error aggregation
-✔ Standard response flow
+- Kafka configuration
+- Mongo configuration
+- Logging
+- Encryption settings
 
-Business services focus only on logic — SDK handles infrastructure.
+Each service imports it:
 
-🧱 TrackLog Model
+```yaml
+spring:
+  application:
+    name: persist-service
+  config:
+    import: >
+      classpath:base-config.yaml,
+      classpath:persist-service-config.yaml
+```
 
-This model represents a full API transaction:
+---
 
+## 🛰 Services
+
+### 1️⃣ Reverse Service
+- Reverses words in a sentence
+- Assumption: Words shorter than 2 characters are treated as validation errors
+
+### 2️⃣ Search Service
+- Searches stored sentences/words
+- Uses MongoDB text indexes for fast lookup
+
+### 3️⃣ Persist Service
+- Kafka consumer
+- Stores TrackLog events into MongoDB
+- Implements failure handling logic
+
+---
+
+## 🗄 TrackLog MongoDB Schema
+
+Example document stored in `track_logs` collection:
+
+```json
 {
-  "uniqueId": "uuid",
-  "serviceName": "reverse",
-  "requestBody": { },
-  "responseBody": { },
-  "requestTs": "timestamp",
-  "responseTs": "timestamp",
-  "executionTimeMs": 123,
-  "httpStatus": 200
+  "serviceName": "reverse-service",
+  "endpoint": "/reverse",
+  "requestBody": {
+    "sentence": "hello world"
+  },
+  "responseBody": {
+    "result": "olleh dlrow"
+  },
+  "severity": "INFO",
+  "timestamp": "2026-01-31T10:15:30Z",
+  "executionTimeMs": 45
 }
+```
 
-💾 TrackLog Database Schema
-Example SQL Table
-CREATE TABLE track_logs (
-    id BIGINT PRIMARY KEY AUTO_INCREMENT,
-    unique_id VARCHAR(100),
-    service_name VARCHAR(50),
-    request_body TEXT,
-    response_body TEXT,
-    request_ts TIMESTAMP,
-    response_ts TIMESTAMP,
-    execution_time_ms BIGINT,
-    http_status INT
-);
+### 📌 Indexes Created
 
-Example Mongo Document
-{
-  "_id": "ObjectId",
-  "uniqueId": "uuid",
-  "serviceName": "reverse",
-  "requestBody": { },
-  "responseBody": { },
-  "requestTs": "ISODate",
-  "responseTs": "ISODate",
-  "executionTimeMs": 123,
-  "httpStatus": 200
-}
+```javascript
+db.track_logs.createIndex({ "requestBody.sentence": "text" }, { name: "requestBody_sentence_text" })
+db.track_logs.createIndex({ severity: 1 }, { name: "severity_index" })
+```
 
-⚙️ Kafka Configuration
-Producer (auto-used by SDK)
-kafka:
-  producer:
-    bootstrap-servers: localhost:9092
+---
 
-Consumer (enabled only in persist-service)
-track:
-  kafka:
-    consumer:
-      enabled: true
+## 🧪 Infrastructure Used
 
-🧠 Why This Design Works
-Problem	Solution
-Duplicate logging code	AOP with @Track
-Controller clutter	SDK abstraction
-Blocking DB logging	Kafka async events
-Tight coupling	Shared SDK layer
-Hard observability	Standard TrackLog model
-Scalability issues	Separate persist-service
-📌 Summary
+| Component | Technology |
+|----------|------------|
+| Messaging | Redpanda (Kafka-compatible) |
+| Database | MongoDB Atlas |
+| Framework | Spring Boot |
+| Validation | NetworkNT JSON Schema |
+| Logging | SLF4J + Track Aspect |
 
-This project showcases:
+---
 
-✔ Clean microservice architecture
-✔ Reusable SDK-based infrastructure
-✔ Annotation-driven request tracking
-✔ Centralized schema validation
-✔ Event-driven logging via Kafka
+## 🔐 Certificate Demo
+For demonstration of SSL/TLS configuration:
+- Sample **server** and **client certificates** were generated
+- Shows how mutual TLS *could* be configured in real deployments
 
-The Base SDK acts as a foundational framework for future services to plug into with minimal effort.
+---
+
+## ⚠ Assumptions Made
+- Words with length < 2 are considered invalid for reversal
+- Some validation rules are hardcoded but can be moved to a Config Server
+
+---
+
+## 🚧 Enhancements Not Implemented (Time Constraints)
+
+- Centralized Config Server
+- Retry with backoff for Kafka & Mongo
+- Monitoring dashboards
+- Authentication/Authorization layer
+
+### Resilience Design (Planned)
+| Failure | Planned Handling |
+|--------|------------------|
+| Kafka failure in Persist | Direct fallback write to MongoDB |
+| MongoDB failure | Publish event to Kafka DLQ |
+
+---
+
+## 🚀 How to Run (Summary)
+
+1. Start Redpanda (Kafka)
+2. Start MongoDB Atlas cluster
+3. Run Persist Service
+4. Run Reverse/Search Services
+5. Send REST requests and observe TrackLog entries in MongoDB
+
+---
+
+## 👨‍💻 Author
+Garvit Choudhary  
+Microservices • Spring Boot • Event-Driven Systems
