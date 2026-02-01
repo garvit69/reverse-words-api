@@ -77,11 +77,11 @@ One dependency that provides:
 ```mermaid
 flowchart LR
     Client --> API[Reverse/Search API Service]
-    API -->|@TrackLog Event| Kafka[(Kafka / Redpanda)]
+    API -->|TrackLog Event| Kafka[(Kafka / Redpanda)]
     Kafka --> PersistService[Persist Service]
     PersistService --> MongoDB[(MongoDB Atlas)]
-    PersistService -->|On Mongo Failure| DLQ[Kafka DLQ Topic]
-    PersistService -->|On Kafka Failure| MongoFallback[(Direct Mongo Insert)]
+    PersistService -->|Mongo Failure| DLQ[Kafka DLQ Topic][not implemented]
+    PersistService -->|Kafka Failure| MongoFallback[(Direct Mongo Insert)][not implemented]
 ```
 
 ### Request Processing Flow
