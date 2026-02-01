@@ -1,0 +1,6 @@
+spring:
+  application:
+    name: word-service
+  config:
+    import: >
+      classpath:base-config.yaml

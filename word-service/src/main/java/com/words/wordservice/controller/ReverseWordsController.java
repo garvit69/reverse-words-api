@@ -1,0 +1,54 @@
+package com.words.wordservice.controller;
+
+import com.words.basesdk.aspect.Track;
+import com.words.basesdk.controller.BaseController;
+import com.words.basesdk.service.ServiceTask;
+import com.words.schema.base.BaseRes;
+import com.words.schema.reverse.ReverseSentenceReq;
+import com.words.schema.reverse.ReverseSentenceRes;
+import com.words.wordservice.service.ReverseWordsService;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+import static com.words.wordservice.util.WordsServiceConstants.*;
+
+@RestController
+@RequestMapping("/words")
+@Slf4j
+public class ReverseWordsController extends BaseController<ReverseSentenceReq, ReverseSentenceRes> {
+    final ReverseWordsService reverseWordsService;
+
+    public ReverseWordsController(ReverseWordsService reverseWordsService) {
+        this.reverseWordsService = reverseWordsService;
+    }
+
+    @Track(serviceName = REVERSE_WORDS_SERVICE,requestClassName = REVERSE_WORDS_CLASS_NAME)
+    @PostMapping("/reverse")
+    public ResponseEntity<? extends BaseRes> processRequest(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse){
+        ServiceTask serviceTask=generateServiceTask(httpServletRequest, httpServletResponse);
+        try{
+            if (hasErrors(serviceTask)){
+                return ResponseEntity.status(getHttpStatusCode(serviceTask)).body((BaseRes) serviceTask.getResponse());
+            }
+            reverseWordsService.processRequest(serviceTask);
+            if (hasErrors(serviceTask)){
+                return ResponseEntity.status(getHttpStatusCode(serviceTask)).body((BaseRes) serviceTask.getResponse());
+            }
+            return ResponseEntity.status(getHttpStatusCode(serviceTask)).body((BaseRes) serviceTask.getResponse());
+
+        }catch (Exception e){
+            log.error("Internal Exception occurred while processing reverse words request", e);
+            return ResponseEntity.status(500).body((BaseRes) serviceTask.getResponse());
+        }
+    }
+
+    @Override
+    protected String getValidationSchema() {
+        return "schema/ReverseSentenceReq.json";
+    }
+}

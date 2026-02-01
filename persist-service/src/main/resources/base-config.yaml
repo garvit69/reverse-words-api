@@ -1,0 +1,55 @@
+spring:
+  mongodb:
+    database: words-api-db
+    host: cluster0.8mxav.mongodb.net
+    username: admin
+    encryptPassword: randompass123
+
+kafka:
+  producer:
+    bootstrap-servers: d5v7sf9ol7pju39vnuo0.any.ap-south-1.mpx.prd.cloud.redpanda.com:9092
+    acks: all
+    retries: 3
+    batch-size: 16384
+    linger-ms: 1
+    buffer-memory: 33554432
+    security-protocol: SASL_SSL
+    sasl-mechanism: SCRAM-SHA-256
+    sasl-jaas-config: >
+      org.apache.kafka.common.security.scram.ScramLoginModule required
+      username="words-user"
+      password="testuserpass123";
+
+  consumer:
+    bootstrap-servers: d5v7sf9ol7pju39vnuo0.any.ap-south-1.mpx.prd.cloud.redpanda.com:9092
+    group-id: track-log-group
+    auto-offset-reset: earliest
+    security-protocol: SASL_SSL
+    sasl-mechanism: SCRAM-SHA-256
+    sasl-jaas-config: >
+      org.apache.kafka.common.security.scram.ScramLoginModule required
+      username="words-user"
+      password="testuserpass123";
+
+track:
+  kafka:
+    topic: words.track.aspect
+    consumer:
+      enabled: false
+
+management:
+  health:
+    mongodb:
+      enabled: false
+
+server:
+  ssl:
+    enabled: true
+    key-store: classpath:server-keystore.p12
+    key-store-password: password
+    key-store-type: PKCS12
+
+    trust-store: classpath:truststore.p12
+    trust-store-password: password
+
+    client-auth: need

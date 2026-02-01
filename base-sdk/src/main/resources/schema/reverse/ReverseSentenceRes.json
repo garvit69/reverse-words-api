@@ -1,0 +1,14 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "title": "ReverseSentenceRes",
+  "type": "object",
+  "extends": {
+    "$ref": "../base/BaseRes.json"
+  },
+  "properties": {
+    "reversedSentence": {
+      "type": "string"
+    }
+  },
+  "required": ["reversedSentence"]
+}

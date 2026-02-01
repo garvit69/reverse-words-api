@@ -1,0 +1,24 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "word": {
+      "type": "string",
+      "description": "Word used to search stored request/response pairs"
+    },
+    "getAllRecords": {
+      "type": "boolean",
+      "description": "If true and word is absent, all DB records are returned"
+    },
+    "severity": {
+      "type": "string",
+      "enum": ["INFO", "ERROR"],
+      "description": "Optional severity filter"
+    }
+  },
+  "oneOf": [
+    { "required": ["word"], "not": { "required": ["getAllRecords"] } },
+    { "required": ["getAllRecords"], "not": { "required": ["word"] } }
+  ]
+}

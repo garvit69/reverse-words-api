@@ -1,0 +1,7 @@
+spring:
+  application:
+    name: persist-service
+  config:
+    import: >
+      classpath:base-config.yaml,
+      classpath:persist-service-config.yaml

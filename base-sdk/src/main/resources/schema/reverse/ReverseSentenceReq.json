@@ -1,0 +1,11 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "type": "object",
+  "properties": {
+    "sentence": {
+      "type": "string",
+      "minLength": 2
+    }
+  },
+  "required": ["sentence"]
+}

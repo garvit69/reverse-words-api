@@ -1,0 +1,47 @@
+plugins {
+	id 'java'
+	id 'org.springframework.boot' version '4.0.2'
+	id 'io.spring.dependency-management' version '1.1.7'
+}
+
+group = 'com.words'
+version = '0.0.1-SNAPSHOT'
+description = 'Service consuming from kafka topic to perform async db operations'
+
+java {
+	toolchain {
+		languageVersion = JavaLanguageVersion.of(17)
+	}
+}
+
+configurations {
+	compileOnly {
+		extendsFrom annotationProcessor
+	}
+}
+
+repositories {
+	mavenCentral()
+}
+
+dependencies {
+	implementation 'org.springframework.boot:spring-boot-micrometer-tracing-brave'
+	implementation 'org.springframework.boot:spring-boot-starter-actuator'
+	implementation 'org.springframework.boot:spring-boot-starter-kafka'
+	implementation 'org.springframework.boot:spring-boot-starter-mongodb'
+	implementation 'org.springframework.boot:spring-boot-starter-data-mongodb'
+	implementation 'org.springframework.boot:spring-boot-starter-web'
+	implementation 'com.fasterxml.jackson.core:jackson-databind'
+	implementation 'org.springframework.boot:spring-boot-starter-webmvc'
+	implementation 'io.micrometer:micrometer-tracing-bridge-brave'
+	implementation 'org.aspectj:aspectjrt:1.9.19'
+	implementation 'org.aspectj:aspectjweaver:1.9.19'
+	implementation files("libs/base-sdk.jar")
+	implementation 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310'
+	implementation 'com.networknt:json-schema-validator:1.5.6'
+	implementation 'org.aspectj:aspectjrt:1.9.19'
+	implementation 'org.aspectj:aspectjweaver:1.9.19'
+	compileOnly 'org.projectlombok:lombok'
+	annotationProcessor 'org.projectlombok:lombok'
+}
+

@@ -1,0 +1,80 @@
+plugins {
+	id 'java'
+	id 'org.springframework.boot' version '4.0.2'
+	id 'io.spring.dependency-management' version '1.1.7'
+	id "org.jsonschema2pojo" version "1.2.1"
+}
+
+group = 'com.words'
+version = '0.0.1-SNAPSHOT'
+description = 'Base Package used as dependency across all services for code reusability'
+
+java {
+	toolchain {
+		languageVersion = JavaLanguageVersion.of(17)
+	}
+}
+
+configurations {
+	compileOnly {
+		extendsFrom annotationProcessor
+	}
+}
+
+repositories {
+	mavenCentral()
+}
+
+dependencies {
+	implementation 'org.springframework.boot:spring-boot-micrometer-tracing-brave'
+	implementation 'org.springframework.boot:spring-boot-starter-actuator'
+	implementation 'org.springframework.boot:spring-boot-starter-kafka'
+	implementation 'org.springframework.boot:spring-boot-starter-mongodb'
+	implementation 'org.springframework.boot:spring-boot-starter-data-mongodb'
+	implementation 'org.springframework.boot:spring-boot-starter-webmvc'
+	implementation 'io.micrometer:micrometer-tracing-bridge-brave'
+	implementation 'com.networknt:json-schema-validator:1.5.6'
+	implementation 'org.aspectj:aspectjrt:1.9.19'
+	implementation 'org.aspectj:aspectjweaver:1.9.19'
+	compileOnly 'org.projectlombok:lombok'
+	annotationProcessor 'org.projectlombok:lombok'
+	implementation 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310'
+}
+
+sourceSets {
+	main {
+		java {
+			srcDir "${buildDir}/generated-sources/js2p"
+		}
+	}
+}
+
+compileJava.dependsOn tasks.generateJsonSchema2Pojo
+
+bootJar {
+	enabled = false
+}
+
+jar {
+	enabled = true
+}
+
+jsonSchema2Pojo {
+	source = files("${projectDir}/src/main/resources/schema")
+	targetDirectory = file("${buildDir}/generated-sources/js2p")
+	targetPackage = "com.words.schema"
+
+	annotationStyle = "jackson2"
+	inclusionLevel = "NON_EMPTY"
+
+	generateBuilders = true
+	includeConstructors = true
+	includeHashcodeAndEquals = true
+	includeToString = true
+
+	sourceType = 'jsonschema'
+	useTitleAsClassname = true
+}
+
+
+

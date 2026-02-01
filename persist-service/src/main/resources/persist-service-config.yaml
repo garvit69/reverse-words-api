@@ -1,0 +1,7 @@
+track:
+  kafka:
+    consumer:
+      enabled: true
+
+server:
+  port: 8085

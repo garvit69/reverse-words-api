@@ -1,0 +1,29 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "title": "SearchWordRes",
+  "type": "object",
+  "extends": {
+    "$ref": "../base/BaseRes.json"
+  },
+  "properties": {
+    "records": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/WordRecord"
+      }
+    }
+  },
+  "required": ["records"],
+  "definitions": {
+    "WordRecord": {
+      "title": "WordRecord",
+      "type": "object",
+      "properties": {
+        "word": { "type": "string" },
+        "request": { "$ref": "../reverse/ReverseSentenceReq.json" },
+        "response": { "$ref": "../reverse/ReverseSentenceRes.json" }
+      },
+      "required": ["word", "request", "response"]
+    }
+  }
+}
