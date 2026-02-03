@@ -269,7 +269,7 @@ jsonSchema2Pojo {
 **Example Schema** (`ReverseSentenceReq.json`):
 ```json
 {
-  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$schema": "http://json-schema.org/draft-04/schema#",
   "type": "object",
   "properties": {
     "sentence": {
@@ -631,11 +631,11 @@ Not both.
 8. **Test the APIs**
    ```bash
    # Reverse words
-   POST http://localhost:8080/api/v1/reverse
+   POST https://localhost:8080/words/reverse
    Body: { "sentence": "Final Testing" }
    
    # Search words
-   POST http://localhost:8080/api/v1/search
+   POST https://localhost:8080/words/search
    Body: { "word": "Final" }
    ```
 
